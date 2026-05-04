@@ -1,0 +1,39 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  body {
+    @apply bg-surface text-on-surface min-h-screen antialiased overflow-x-hidden selection:bg-primary/30;
+    font-family: 'Montserrat', sans-serif;
+  }
+
+  code, .mono {
+    font-family: 'JetBrains Mono', monospace;
+  }
+}
+
+.cyber-mesh {
+  background: linear-gradient(
+    to bottom,
+    rgba(10, 14, 20, 0.6) 0%,
+    rgba(10, 14, 20, 0.9) 100%
+  );
+}
+
+.command-pane {
+  @apply bg-surface-container/60 backdrop-blur-2xl border border-primary/10 rounded-m3-xl shadow-2xl overflow-hidden;
+}
+
+.glow-text {
+  text-shadow: 0 0 10px rgba(0, 229, 255, 0.3);
+}
+
+.cyan-scanline {
+  background: linear-gradient(
+    to bottom,
+    transparent 50%,
+    rgba(0, 229, 255, 0.02) 50%
+  );
+  background-size: 100% 4px;
+}
