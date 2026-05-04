@@ -1,8 +1,36 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
+
+interface IntelItem {
+  id: string;
+  source: string;
+  title: string;
+  summary: string;
+  vector: string;
+  criticality: number;
+}
 
 function App() {
   const [activePane, setActivePane] = useState<'feeds' | 'analysis' | 'threats'>('feeds');
+  const [intel, setIntel] = useState<IntelItem[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+
+  useEffect(() => {
+    const fetchIntel = async () => {
+      try {
+        const response = await fetch('http://localhost:3001/api/intel');
+        const json = await response.json();
+        setIntel(json.data);
+      } catch (err) {
+        console.error('Intelligence synchronization failed');
+      } finally {
+        setIsLoading(false);
+      }
+    };
+    fetchIntel();
+    const interval = setInterval(fetchIntel, 10000); // Sync every 10s
+    return () => clearInterval(interval);
+  }, []);
 
   return (
     <main className="min-h-screen w-full flex items-center justify-center relative bg-cyber-hero bg-cover bg-center">
@@ -27,8 +55,9 @@ function App() {
               <div className="w-2 h-2 bg-primary rounded-full animate-pulse" />
               <span>System: Nominal</span>
             </div>
-            <div className="flex items-center space-x-2">
-              <span className="text-tertiary">Threat Level: Low</span>
+            <div className="flex items-center space-x-2 text-tertiary">
+              <span className="material-symbols-outlined text-sm">warning</span>
+              <span>Active Threats: {intel.filter(i => i.criticality > 0.8).length}</span>
             </div>
           </div>
         </header>
@@ -57,21 +86,45 @@ function App() {
                 <span className="material-symbols-outlined text-sm">terminal</span>
                 <span>Active Intel Streams</span>
               </h3>
-              <span className="text-[10px] font-mono text-primary/60">AUTO_REFRESH: ACTIVE</span>
+              <span className="text-[10px] font-mono text-primary/60 uppercase">Sync_Rate: 10s</span>
             </div>
             <div className="p-8 space-y-6 overflow-y-auto h-full pb-24">
-              {[1, 2, 3].map((i) => (
-                <div key={i} className="space-y-3 p-6 bg-surface-container-high/40 rounded-m3-l border border-primary/5 hover:border-primary/20 transition-all cursor-pointer group/item">
-                  <div className="flex justify-between items-start">
-                    <span className="text-[9px] font-mono text-primary px-2 py-1 bg-primary/10 rounded">SOURCE: GLOBAL_NET</span>
-                    <span className="text-[9px] font-mono text-on-surface-variant">T-MINUS: {i}H</span>
-                  </div>
-                  <h4 className="text-lg font-black group-hover:text-primary transition-colors">Critical Infrastructure Update: Neural Network Expansion</h4>
-                  <p className="text-xs text-on-surface-variant leading-relaxed line-clamp-2 font-medium">
-                    New architecture paradigms detected in metropolitan data centers. Stitch intelligence protocol suggests immediate synchronization...
-                  </p>
+              {isLoading ? (
+                <div className="h-full flex items-center justify-center space-x-3">
+                  <div className="w-2 h-2 bg-primary rounded-full animate-bounce" />
+                  <div className="w-2 h-2 bg-primary rounded-full animate-bounce [animation-delay:0.2s]" />
+                  <div className="w-2 h-2 bg-primary rounded-full animate-bounce [animation-delay:0.4s]" />
                 </div>
-              ))}
+              ) : (
+                intel.map((item) => (
+                  <motion.div
+                    initial={{ opacity: 0, x: -10 }}
+                    animate={{ opacity: 1, x: 0 }}
+                    key={item.id}
+                    className={`space-y-3 p-6 bg-surface-container-high/40 rounded-m3-l border transition-all cursor-pointer group/item ${item.criticality > 0.8 ? 'border-tertiary/40 bg-tertiary/5 shadow-[0_0_20px_rgba(255,61,0,0.1)]' : 'border-primary/5 hover:border-primary/20'}`}
+                  >
+                    <div className="flex justify-between items-start">
+                      <div className="flex space-x-2">
+                        <span className={`text-[9px] font-mono px-2 py-1 rounded ${item.criticality > 0.8 ? 'bg-tertiary text-white' : 'bg-primary/10 text-primary'}`}>
+                          SOURCE: {item.source}
+                        </span>
+                        <span className="text-[9px] font-mono text-on-surface-variant bg-surface-container px-2 py-1 rounded">
+                          VECTOR: {item.vector}
+                        </span>
+                      </div>
+                      <span className={`text-[9px] font-mono font-black ${item.criticality > 0.8 ? 'text-tertiary animate-pulse' : 'text-on-surface-variant'}`}>
+                        CRITICALITY: {(item.criticality * 100).toFixed(0)}%
+                      </span>
+                    </div>
+                    <h4 className={`text-lg font-black transition-colors ${item.criticality > 0.8 ? 'text-on-surface group-hover:text-tertiary' : 'group-hover:text-primary'}`}>
+                      {item.title}
+                    </h4>
+                    <p className="text-xs text-on-surface-variant leading-relaxed line-clamp-2 font-medium">
+                      {item.summary}
+                    </p>
+                  </motion.div>
+                ))
+              )}
             </div>
           </section>
 
@@ -84,9 +137,10 @@ function App() {
                <h3 className="text-[10px] font-black text-primary uppercase tracking-widest">Statistical Analysis</h3>
                <div className="space-y-4">
                  {[
-                   { label: 'Network Load', val: '84%' },
+                   { label: 'Network Load', val: '42%' },
                    { label: 'Data Integrity', val: '99.9%' },
-                   { label: 'Threat Mitigation', val: 'Active' }
+                   { label: 'Threat Mitigation', val: 'Active' },
+                   { label: 'Intelligence Sync', val: 'Nominal' }
                  ].map(stat => (
                    <div key={stat.label} className="flex justify-between items-end border-b border-primary/5 pb-2">
                      <span className="text-xs font-bold text-on-surface-variant uppercase">{stat.label}</span>
@@ -96,12 +150,13 @@ function App() {
                </div>
             </div>
 
-            <div className="bg-tertiary/10 border border-tertiary/20 p-8 rounded-m3-xl space-y-4 shadow-xl shadow-tertiary/5 relative group cursor-pointer">
+            <div className="bg-primary/10 border border-primary/20 p-8 rounded-m3-xl space-y-4 shadow-xl shadow-primary/5 relative group cursor-pointer overflow-hidden">
+              <div className="absolute inset-0 bg-primary/5 translate-y-full group-hover:translate-y-0 transition-transform duration-500" />
               <div className="absolute top-0 right-0 p-4 opacity-10 group-hover:scale-110 transition-transform">
-                <span className="material-symbols-outlined text-tertiary">emergency</span>
+                <span className="material-symbols-outlined text-primary text-4xl">verified_user</span>
               </div>
-              <h3 className="text-[10px] font-black text-tertiary uppercase tracking-widest">Emergency Broadcast</h3>
-              <p className="text-sm font-bold text-on-surface serif italic">Total Intelligence Synchronization Initialized.</p>
+              <h3 className="relative z-10 text-[10px] font-black text-primary uppercase tracking-widest">Stitch Loyalty</h3>
+              <p className="relative z-10 text-sm font-bold text-on-surface serif italic">Cyber-Pro Command Tier Active.</p>
             </div>
           </section>
         </div>
@@ -109,7 +164,7 @@ function App() {
         {/* Status Footer */}
         <footer className="flex justify-between items-center px-4 pt-6 text-[9px] font-mono text-on-surface-variant opacity-40 uppercase tracking-[0.4em]">
           <p>© 2026 STITCH-ELITE PROTOCOL</p>
-          <p>STATION: ALPHA_CENTAURI</p>
+          <p>GEO_STATION: ALPHA_CENTAURI</p>
         </footer>
       </div>
     </main>
