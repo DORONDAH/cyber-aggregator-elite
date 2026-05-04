@@ -37,3 +37,26 @@
   );
   background-size: 100% 4px;
 }
+
+/* Elite Scrollbar Curation - 2026 Stitch Standard */
+::-webkit-scrollbar {
+  width: 4px;
+  height: 4px;
+}
+
+::-webkit-scrollbar-track {
+  @apply bg-surface;
+}
+
+::-webkit-scrollbar-thumb {
+  @apply bg-primary/20 rounded-full border border-primary/10;
+  box-shadow: 0 0 10px rgba(0, 229, 255, 0.2);
+}
+
+::-webkit-scrollbar-thumb:hover {
+  @apply bg-primary/40;
+}
+
+.no-scrollbar::-webkit-scrollbar {
+  display: none;
+}
